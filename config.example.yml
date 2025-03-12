@@ -1,0 +1,20 @@
+mcp:
+  servers:
+    - name: "example_tools"
+      command: "example_command"
+      args:
+        - "--cwd"
+        - "/path/to/your/example/directory"
+        - "start"
+        
+ollama_url: "http://localhost:11434"
+chat_model: "example_model:1.0"
+tools_model: "example_tools_model:1.0"
+system_prompt: "You are LLomw, a helpful assistant that answers briefly."
+enable_mcp: true
+temperature: 0.5
+repeat_last_n: 3
+repeat_penalty: 1.5
+tools_temperature: 0.2
+tools_repeat_last_n: 2
+tools_repeat_penalty: 1.0
