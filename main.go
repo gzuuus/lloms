@@ -170,17 +170,15 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	var mcpClient *mcpstdio.Client
+	var mcpClient mcpstdio.Client
+
 	if config.EnableMCP && len(config.MCP.Servers) > 0 {
 		systemColor.Println("Initializing MCP client...")
 
 		server := config.MCP.Servers[0]
 		systemColor.Printf("Using MCP server: %s\n", server.Name)
 
-		mcpClient, err := mcpstdio.NewClient(ctx, server.Command,
-			[]string{},
-			server.Args...,
-		)
+		mcpClient, err = mcpstdio.NewClient(ctx, server.Command, []string{}, server.Args...)
 
 		if err != nil {
 			systemColor.Printf("Warning: Failed to initialize MCP client: %v\n", err)
