@@ -167,33 +167,43 @@ func main() {
 	}
 
 	var ollamaTools []llm.Tool
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	systemColor.Println("Initializing MCP client...")
-	mcpClient, err := mcpstdio.NewClient(ctx, "bun",
-		[]string{},
-		"--cwd",
-		"/home/user/Documents/dev/gz/js-ts/bun/dvmcp/packages/dvmcp-discovery",
-		"start",
-	)
-	if err != nil {
-		systemColor.Printf("Warning: Failed to initialize MCP client: %v\n", err)
-		systemColor.Println("Continuing without MCP tools support.")
-	}
 
-	_, err = mcpClient.Initialize()
-	if err != nil {
-		log.Fatalln("Failed to initialize MCP client", err)
-	}
-	tools, err := mcpClient.ListTools()
-	if err != nil {
-		systemColor.Printf("Warning: Failed to get MCP tools: %v\n", err)
-	} else {
-		ollamaTools = tools
-		toolColor.Println("[DVMCP-DISCOVERY] tools loaded successfully:")
-		for i, tool := range ollamaTools {
-			toolColor.Printf("  %d. %s\n", i+1, tool.Function.Name)
+	var mcpClient *mcpstdio.Client
+	if config.EnableMCP && len(config.MCP.Servers) > 0 {
+		systemColor.Println("Initializing MCP client...")
+
+		server := config.MCP.Servers[0]
+		systemColor.Printf("Using MCP server: %s\n", server.Name)
+
+		mcpClient, err := mcpstdio.NewClient(ctx, server.Command,
+			[]string{},
+			server.Args...,
+		)
+
+		if err != nil {
+			systemColor.Printf("Warning: Failed to initialize MCP client: %v\n", err)
+			systemColor.Println("Continuing without MCP tools support.")
+		} else {
+			_, err = mcpClient.Initialize()
+			if err != nil {
+				log.Fatalln("Failed to initialize MCP client", err)
+			}
+
+			tools, err := mcpClient.ListTools()
+			if err != nil {
+				systemColor.Printf("Warning: Failed to get MCP tools: %v\n", err)
+			} else {
+				ollamaTools = tools
+				toolColor.Printf("[%s] tools loaded successfully:\n", server.Name)
+				for i, tool := range ollamaTools {
+					toolColor.Printf("  %d. %s\n", i+1, tool.Function.Name)
+				}
+			}
 		}
+	} else if config.EnableMCP {
+		systemColor.Println("MCP enabled but no servers specified in config. Continuing without MCP tools support.")
 	}
 
 	systemColor.Printf("Using model: %s\n", config.ChatModel)
@@ -283,7 +293,6 @@ func main() {
 						toolCall.Function.Name, toolCall.Function.Arguments)
 
 					mcpResult, err := mcpClient.CallTool(toolCall.Function.Name, toolCall.Function.Arguments)
-					cancel()
 
 					if err != nil {
 						systemColor.Printf("Tool call failed: %v\n", err)

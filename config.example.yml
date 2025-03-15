@@ -1,12 +1,3 @@
-mcp:
-  servers:
-    - name: "example_tools"
-      command: "example_command"
-      args:
-        - "--cwd"
-        - "/path/to/your/example/directory"
-        - "start"
-        
 ollama_url: "http://localhost:11434"
 chat_model: "example_model:1.0"
 tools_model: "example_tools_model:1.0"
@@ -18,3 +9,12 @@ repeat_penalty: 1.5
 tools_temperature: 0.2
 tools_repeat_last_n: 2
 tools_repeat_penalty: 1.0
+mcp:
+  servers:
+    - name: "weather"
+      command: "uv"
+      args:
+        - "--directory"
+        - "/ABSOLUTE/PATH/TO/PARENT/FOLDER/weather"
+        - "run"
+        - "weather.py"
