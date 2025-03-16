@@ -2,8 +2,7 @@
 
 LLoms is a simple command-line chat client that interfaces with language models through Ollama while supporting the integration of external tools via MCP.
 
-![Demo video](https://video.nostr.build/5a823a0a4a6050155b6a380c60feb5e65104756538c3e9fa4a813e9a830da812.mp4)
-
+[Demo video](https://video.nostr.build/5a823a0a4a6050155b6a380c60feb5e65104756538c3e9fa4a813e9a830da812.mp4)
 ## Features
 
 - Clean and simple command-line interface for chatting with LLMs
