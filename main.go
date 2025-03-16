@@ -24,7 +24,7 @@ const (
 	RoleUser                = "user"
 	RoleAssistant           = "assistant"
 	MaxConversationMessages = 4
-	defaultSystemPrompt     = "You are LLoms, a helpful assistant that answers briefly"
+	defaultSystemPrompt     = ""
 )
 
 type MCPServer struct {
@@ -145,6 +145,22 @@ func toolExists(toolName string, tools []llm.Tool) bool {
 		}
 	}
 	return false
+}
+
+func findSimilarTool(toolName string, tools []llm.Tool) (string, bool) {
+	for _, tool := range tools {
+		if tool.Function.Name == toolName {
+			return tool.Function.Name, true
+		}
+	}
+
+	for _, tool := range tools {
+		if strings.HasPrefix(tool.Function.Name, toolName) {
+			return tool.Function.Name, true
+		}
+	}
+
+	return "", false
 }
 
 func main() {
@@ -283,14 +299,17 @@ func main() {
 			} else if len(answer.Message.ToolCalls) > 0 {
 				toolCall := answer.Message.ToolCalls[0]
 
-				if !toolExists(toolCall.Function.Name, ollamaTools) {
-					systemColor.Printf("Warning: Tool '%s' does not exist. Continuing with standard chat...\n",
+				if similarTool, found := findSimilarTool(toolCall.Function.Name, ollamaTools); !found {
+					systemColor.Printf("Warning: Tool '%s' does not exist and no similar tools found. Continuing with standard chat...\n",
 						toolCall.Function.Name)
 				} else {
+					if similarTool != toolCall.Function.Name {
+						toolColor.Printf("🛠️ Using similar tool: '%s' instead of '%s'\n",
+							similarTool, toolCall.Function.Name)
+					}
 					toolColor.Printf("🛠️ Calling tool: %s with args: %s\n",
-						toolCall.Function.Name, toolCall.Function.Arguments)
-
-					mcpResult, err := mcpClient.CallTool(toolCall.Function.Name, toolCall.Function.Arguments)
+						similarTool, toolCall.Function.Arguments)
+					mcpResult, err := mcpClient.CallTool(similarTool, toolCall.Function.Arguments)
 
 					if err != nil {
 						systemColor.Printf("Tool call failed: %v\n", err)
